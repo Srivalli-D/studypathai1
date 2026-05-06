@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Roadmap – StudyPath AI Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    .roadmap-split{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start;}
+    .generator-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;position:sticky;top:calc(var(--topbar-height) + 1.5rem);}
+    .generator-title{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:1.25rem;}
+    .roadmap-output{display:flex;flex-direction:column;gap:1rem;}
+    .roadmap-generated-card{background:var(--bg-card);border:1px solid rgba(56,189,248,.2);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;}
+    .roadmap-generated-title{font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:.5rem;background:linear-gradient(135deg,#38bdf8,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .roadmap-summary{font-size:.85rem;color:var(--text-soft);line-height:1.65;margin-bottom:1rem;}
+    .roadmap-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;}
+    .saved-roadmap-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;transition:all .25s;}
+    .saved-roadmap-card:hover{border-color:var(--border-strong);}
+    .connector-line{width:2px;background:linear-gradient(180deg,rgba(56,189,248,.4),rgba(139,92,246,.4));margin-left:19px;height:24px;}
+    @media(max-width:900px){.roadmap-split{grid-template-columns:1fr;}.generator-panel{position:static;}}
+  </style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/guard.js"></script>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header"><a href="index.html" class="brand-wrap"><div class="brand-mark">S</div><div class="brand-text">StudyPath AI Pro <span>Career & Study Companion</span></div></a></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"     class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="performance.html"   class="nav-item"><span class="nav-icon">📊</span> Performance</a>
+    <a href="roadmap.html"       class="nav-item"><span class="nav-icon">🗺️</span> AI Roadmap</a>
+    <a href="study-planner.html" class="nav-item"><span class="nav-icon">📚</span> Study Planner</a>
+    <a href="skills.html"        class="nav-item"><span class="nav-icon">🚀</span> Skills</a>
+    <a href="applications.html"  class="nav-item"><span class="nav-icon">💼</span> Applications</a>
+    <a href="assignments.html"   class="nav-item"><span class="nav-icon">📋</span> Assignments</a>
+    <a href="notes.html"         class="nav-item"><span class="nav-icon">📝</span> Notes</a>
+    <a href="resources.html"     class="nav-item"><span class="nav-icon">🔗</span> Resources</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar">U</div><div class="user-info"><div class="user-name">Loading…</div><div class="user-email"></div></div></div>
+    <button class="nav-logout" id="logout-btn"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <button class="btn btn-icon btn-ghost" id="sidebar-toggle" style="display:none;">☰</button>
+    <h1 class="topbar-title">🗺️ AI Roadmap Generator</h1>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="roadmap-split">
+    <!-- Generator Panel -->
+    <div class="generator-panel">
+      <div class="generator-title">🎯 Generate Your Roadmap</div>
+      <form id="roadmap-form" novalidate>
+        <div class="form-group"><label class="form-label" for="rm-goal">Your Goal *</label><input type="text" id="rm-goal" class="form-control" placeholder="e.g. Become a Frontend Developer" /></div>
+        <div class="form-group"><label class="form-label" for="rm-skills">Current Skills</label><input type="text" id="rm-skills" class="form-control" placeholder="e.g. HTML, CSS basics" /></div>
+        <div class="form-group">
+          <label class="form-label" for="rm-level">Experience Level *</label>
+          <select id="rm-level" class="form-control"><option value="">Select level</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rm-timeline">Timeline *</label>
+          <select id="rm-timeline" class="form-control">
+            <option value="">Select timeline</option>
+            <option>1 Month</option><option>3 Months</option><option>6 Months</option><option>1 Year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rm-style">Learning Style</label>
+          <select id="rm-style" class="form-control">
+            <option value="Mixed">Mixed</option>
+            <option value="Video-based">Video-based</option>
+            <option value="Reading-based">Reading-based</option>
+            <option value="Project-based">Project-based</option>
+          </select>
+        </div>
+        <div class="form-error" id="rm-form-error"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="generate-btn">🗺️ Generate Roadmap</button>
+      </form>
+      <div style="margin-top:.75rem;padding:.65rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius-sm);font-size:.72rem;color:var(--warning);">
+        <strong>Note:</strong> Roadmaps are generated using built-in templates. Gemini AI integration will be added via a secure backend — never expose API keys in the browser.
+      </div>
+    </div>
+
+    <!-- Output Area -->
+    <div>
+      <!-- Generated Roadmap Output -->
+      <div id="roadmap-output" style="display:none;"></div>
+
+      <!-- Saved Roadmaps -->
+      <div>
+        <div class="section-header" style="margin-bottom:1rem;">
+          <div><div class="section-title">📂 Saved Roadmaps</div><div class="section-subtitle">Your previously generated roadmaps</div></div>
+        </div>
+        <div id="saved-roadmaps-list"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-items">
+    <a href="dashboard.html"     class="mobile-nav-item"><span class="mobile-nav-icon">🏠</span>Home</a>
+    <a href="study-planner.html" class="mobile-nav-item"><span class="mobile-nav-icon">📚</span>Study</a>
+    <a href="skills.html"        class="mobile-nav-item"><span class="mobile-nav-icon">🚀</span>Skills</a>
+    <a href="roadmap.html"       class="mobile-nav-item active"><span class="mobile-nav-icon">🗺️</span>AI</a>
+    <a href="notes.html"         class="mobile-nav-item"><span class="mobile-nav-icon">📝</span>Notes</a>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/firestore.js"></script>
+<script src="js/roadmap.js"></script>
+</body>
+</html>

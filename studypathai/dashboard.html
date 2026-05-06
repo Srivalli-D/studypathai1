@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – StudyPath AI Pro</title>
+  <meta name="description" content="Your StudyPath AI Pro dashboard — see all your study stats, tasks, skills, and applications in one place." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    .welcome-bar {
+      background: linear-gradient(135deg, rgba(56,189,248,0.1), rgba(139,92,246,0.1));
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 1.5rem 1.75rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .welcome-title { font-family:'Poppins',sans-serif; font-size:1.4rem; font-weight:800; }
+    .welcome-title span { background:linear-gradient(135deg,#38bdf8,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .welcome-sub { font-size:.85rem; color:var(--text-muted); margin-top:.25rem; }
+    .welcome-date { font-size:.8rem; color:var(--text-muted); text-align:right; }
+    .dash-section { margin-bottom:1.75rem; }
+    .quick-actions { display:flex; flex-wrap:wrap; gap:.75rem; }
+    .app-snapshot-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; }
+    .snap-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:.9rem; text-align:center; }
+    .snap-val { font-family:'Poppins',sans-serif; font-size:1.4rem; font-weight:700; }
+    .snap-lbl { font-size:.68rem; color:var(--text-muted); margin-top:.2rem; }
+    .recent-items { display:flex; flex-direction:column; gap:.5rem; }
+    .recent-item { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:.75rem; font-size:.85rem; }
+    @media(max-width:900px){.app-snapshot-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:600px){.app-snapshot-grid{grid-template-columns:repeat(2,1fr);}.welcome-bar{flex-direction:column;}.welcome-date{text-align:left;}}
+  </style>
+</head>
+<body>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/guard.js"></script>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <a href="index.html" class="brand-wrap">
+      <div class="brand-mark">S</div>
+      <div class="brand-text">StudyPath AI Pro <span>Career & Study Companion</span></div>
+    </a>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"     class="nav-item" id="nav-dashboard"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="performance.html"   class="nav-item" id="nav-performance"><span class="nav-icon">📊</span> Performance</a>
+    <a href="roadmap.html"       class="nav-item" id="nav-roadmap"><span class="nav-icon">🗺️</span> AI Roadmap</a>
+    <a href="study-planner.html" class="nav-item" id="nav-study"><span class="nav-icon">📚</span> Study Planner</a>
+    <a href="skills.html"        class="nav-item" id="nav-skills"><span class="nav-icon">🚀</span> Skills</a>
+    <a href="applications.html"  class="nav-item" id="nav-apps"><span class="nav-icon">💼</span> Applications</a>
+    <a href="assignments.html"   class="nav-item" id="nav-assign"><span class="nav-icon">📋</span> Assignments</a>
+    <a href="notes.html"         class="nav-item" id="nav-notes"><span class="nav-icon">📝</span> Notes</a>
+    <a href="resources.html"     class="nav-item" id="nav-resources"><span class="nav-icon">🔗</span> Resources</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">U</div>
+      <div class="user-info">
+        <div class="user-name">Loading…</div>
+        <div class="user-email"></div>
+      </div>
+    </div>
+    <button class="nav-logout" id="logout-btn"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <button class="btn btn-icon btn-ghost" id="sidebar-toggle" aria-label="Toggle sidebar" style="display:none;">☰</button>
+    <h1 class="topbar-title">Dashboard</h1>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user-name" style="font-size:.83rem;color:var(--text-muted);"></span>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+  <!-- Welcome Bar -->
+  <div class="welcome-bar">
+    <div>
+      <div class="welcome-title">Welcome back, <span id="welcome-name">there</span> 👋</div>
+      <div class="welcome-sub">Here's your progress overview for today. Keep going!</div>
+    </div>
+    <div class="welcome-date" id="today-date"></div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="dash-section">
+    <div class="section-header"><div><div class="section-title">Overview</div></div></div>
+    <div class="grid-3" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue">📚</div>
+        <div><div class="stat-value" id="stat-tasks">—</div><div class="stat-label">Study Tasks</div><div class="stat-sub" id="stat-tasks-sub"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">🚀</div>
+        <div><div class="stat-value" id="stat-skills">—</div><div class="stat-label">Skills Tracked</div><div class="stat-sub" id="stat-skills-sub"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">💼</div>
+        <div><div class="stat-value" id="stat-apps">—</div><div class="stat-label">Applications</div><div class="stat-sub" id="stat-apps-sub"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow">📋</div>
+        <div><div class="stat-value" id="stat-assign">—</div><div class="stat-label">Assignments</div><div class="stat-sub" id="stat-assign-sub"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon cyan">📝</div>
+        <div><div class="stat-value" id="stat-notes">—</div><div class="stat-label">Notes Saved</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">🗺️</div>
+        <div><div class="stat-value" id="stat-roadmaps">—</div><div class="stat-label">Roadmaps Saved</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="grid-2" style="margin-bottom:1.75rem;">
+    <!-- Today's Focus -->
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">📌 Today's Focus</div><div class="section-subtitle">High-priority pending tasks</div></div>
+        <a href="study-planner.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div id="todays-focus-list"></div>
+    </div>
+
+    <!-- Upcoming Assignments -->
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">⏰ Upcoming Assignments</div><div class="section-subtitle">Due soon</div></div>
+        <a href="assignments.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div id="upcoming-assignments-list"></div>
+    </div>
+  </div>
+
+  <!-- Recent Notes + Application Snapshot -->
+  <div class="grid-2" style="margin-bottom:1.75rem;">
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">📝 Recent Notes</div></div>
+        <a href="notes.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div id="recent-notes-list"></div>
+    </div>
+
+    <div>
+      <div class="section-header">
+        <div><div class="section-title">💼 Application Snapshot</div></div>
+        <a href="applications.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div class="app-snapshot-grid" id="app-snapshot"></div>
+    </div>
+  </div>
+
+  <!-- AI Roadmap CTA -->
+  <div class="dash-section">
+    <div class="card card-strong" style="background:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(139,92,246,0.12));border-color:rgba(56,189,248,0.2);padding:2rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div style="font-size:1.5rem;margin-bottom:.5rem;">🗺️</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:.35rem;">AI Career Roadmap Generator</div>
+          <div style="font-size:.85rem;color:var(--text-muted);">Generate a personalised career roadmap. <span id="roadmap-count-text"></span></div>
+        </div>
+        <a href="roadmap.html" class="btn btn-primary">Generate Roadmap →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Insights Section -->
+  <div class="dash-section" id="perf-insights-section">
+    <!-- Critical Alert -->
+    <div id="perf-critical-alert" style="display:none;margin-bottom:1.25rem;">
+      <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:var(--radius-sm);padding:.85rem 1.25rem;display:flex;align-items:center;gap:.75rem;font-size:.87rem;">
+        <span style="font-size:1.1rem;">🚨</span>
+        <div><strong>Critical Attention Needed:</strong> <span id="perf-critical-text">You have critical weak areas that need attention.</span></div>
+        <a href="performance.html" class="btn btn-danger btn-sm" style="margin-left:auto;flex-shrink:0;">View &rarr;</a>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div><div class="section-title">📊 Performance Insights</div><div class="section-subtitle">Based on your exam scores and results</div></div>
+      <a href="performance.html" class="btn btn-ghost btn-sm">Analyze &rarr;</a>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:1.25rem;" id="weakest-topics-grid">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Recommended Focus -->
+    <div id="perf-focus-card" style="margin-bottom:1.25rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem 1.4rem;">
+      <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;">🎯 Recommended Focus This Week</div>
+      <div id="perf-focus-text" style="font-size:.92rem;font-weight:500;">Add your first performance result to get smart focus recommendations.</div>
+    </div>
+
+    <!-- Auto-generated Tasks Preview -->
+    <div id="perf-tasks-preview-wrap" style="display:none;">
+      <div class="section-header" style="margin-bottom:.75rem;">
+        <div class="section-subtitle">⚡ Auto-Generated Tasks (from Performance Analyzer)</div>
+        <a href="study-planner.html" class="btn btn-ghost btn-sm">View All</a>
+      </div>
+      <div id="perf-tasks-preview" class="recent-items"></div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="dash-section">
+    <div class="section-header"><div class="section-title">⚡ Quick Actions</div></div>
+    <div class="quick-actions">
+      <a href="study-planner.html" class="btn btn-secondary">+ Add Study Task</a>
+      <a href="skills.html"        class="btn btn-secondary">+ Add Skill</a>
+      <a href="notes.html"         class="btn btn-secondary">+ Add Note</a>
+      <a href="applications.html"  class="btn btn-secondary">+ Add Application</a>
+      <a href="assignments.html"   class="btn btn-secondary">+ Add Assignment</a>
+      <a href="performance.html"   class="btn btn-primary">📊 Analyse Performance</a>
+      <a href="roadmap.html"       class="btn btn-secondary">🗺️ Generate Roadmap</a>
+    </div>
+  </div>
+
+</main>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-items">
+    <a href="dashboard.html"     class="mobile-nav-item active"><span class="mobile-nav-icon">🏠</span>Home</a>
+    <a href="study-planner.html" class="mobile-nav-item"><span class="mobile-nav-icon">📚</span>Study</a>
+    <a href="skills.html"        class="mobile-nav-item"><span class="mobile-nav-icon">🚀</span>Skills</a>
+    <a href="roadmap.html"       class="mobile-nav-item"><span class="mobile-nav-icon">🗺️</span>AI</a>
+    <a href="notes.html"         class="mobile-nav-item"><span class="mobile-nav-icon">📝</span>Notes</a>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/firestore.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

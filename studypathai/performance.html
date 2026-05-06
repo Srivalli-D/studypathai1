@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Analyzer – StudyPath AI Pro</title>
+  <meta name="description" content="Enter your exam scores and StudyPath AI Pro will automatically detect weak topics and generate a focused study plan." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    /* ── Performance page styles ─────────────────────────── */
+    .perf-page-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* Input form card */
+    .perf-form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+      position: sticky;
+      top: calc(var(--topbar-height) + 1rem);
+    }
+    .perf-form-card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .perf-field-error {
+      font-size: .75rem; color: var(--danger); margin-top: .25rem; min-height: 1rem;
+    }
+    .perf-score-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    /* Confidence chips */
+    .confidence-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .confidence-chip {
+      padding: .3rem .85rem;
+      border-radius: 20px;
+      font-size: .78rem; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .confidence-chip.selected-low    { background:rgba(239,68,68,.15);   color:var(--danger);  border-color:rgba(239,68,68,.3);   }
+    .confidence-chip.selected-medium { background:rgba(245,158,11,.15);  color:var(--warning); border-color:rgba(245,158,11,.3);  }
+    .confidence-chip.selected-high   { background:rgba(34,197,94,.15);   color:var(--success); border-color:rgba(34,197,94,.3);   }
+
+    /* Analysis result */
+    #analysis-result { display: none; margin-top: 1.25rem; }
+    .analysis-result-card {
+      background: linear-gradient(135deg, rgba(56,189,248,.08), rgba(139,92,246,.08));
+      border: 1px solid rgba(56,189,248,.2);
+      border-radius: var(--radius-md);
+      padding: 1.4rem;
+    }
+    .analysis-result-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .analysis-pct { font-family:'Poppins',sans-serif; font-size: 2.5rem; font-weight: 800; line-height: 1; }
+    .analysis-rec { font-size: .87rem; color: var(--text-soft); margin-bottom: 1rem; line-height: 1.6; }
+    .analysis-detail-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: .6rem; }
+    .analysis-detail-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: .65rem .85rem;
+    }
+    .analysis-detail-label { font-size: .7rem; color: var(--text-muted); margin-bottom: .2rem; }
+    .analysis-detail-val   { font-size: .88rem; font-weight: 700; }
+    .badge-lg { font-size: .8rem; padding: .3rem .85rem; }
+
+    /* Results panel */
+    .perf-results-panel { min-width: 0; }
+    .perf-filter-bar { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.25rem; align-items: center; }
+    .perf-filter-bar select {
+      padding: .35rem .85rem;
+      border-radius: 20px;
+      font-size: .78rem; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer; outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      padding-right: 1.6rem;
+    }
+
+    /* Result cards */
+    .perf-result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: .75rem;
+      transition: all .25s ease;
+    }
+    .perf-result-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+    .perf-result-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+    .perf-result-title { font-size: .95rem; font-weight: 700; }
+    .perf-result-meta  { font-size: .73rem; color: var(--text-muted); margin-top: .2rem; }
+
+    .perf-score-row { display: flex; align-items: center; gap: 1rem; margin-bottom: .5rem; }
+    .perf-pct-big { font-family:'Poppins',sans-serif; font-size: 1.6rem; font-weight: 800; line-height: 1; flex-shrink: 0; }
+    .perf-score-detail { font-size: .85rem; color: var(--text-soft); }
+
+    .perf-gen-row  { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .perf-gen-badge {
+      font-size: .7rem; font-weight: 500;
+      padding: .2rem .6rem; border-radius: 20px;
+      background: rgba(56,189,248,.1); color: var(--primary);
+      border: 1px solid rgba(56,189,248,.2);
+    }
+    .perf-result-notes {
+      font-size: .78rem; color: var(--text-muted);
+      margin-top: .6rem; padding-top: .6rem;
+      border-top: 1px solid var(--border);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* Empty state */
+    .perf-empty { text-align: center; padding: 3rem 1.5rem; }
+    .perf-empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .perf-empty-msg  { font-size: .95rem; font-weight: 600; color: var(--text-main); }
+    .perf-empty-sub  { font-size: .82rem; color: var(--text-muted); margin-top: .4rem; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .perf-page-grid { grid-template-columns: 1fr; }
+      .perf-form-card { position: static; }
+    }
+    @media (max-width: 600px) {
+      .analysis-detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/guard.js"></script>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+  <div class="sidebar-header">
+    <a href="index.html" class="brand-wrap">
+      <div class="brand-mark">S</div>
+      <div class="brand-text">StudyPath AI Pro <span>Career &amp; Study Companion</span></div>
+    </a>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"     class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="performance.html"   class="nav-item"><span class="nav-icon">📊</span> Performance</a>
+    <a href="roadmap.html"       class="nav-item"><span class="nav-icon">🗺️</span> AI Roadmap</a>
+    <a href="study-planner.html" class="nav-item"><span class="nav-icon">📚</span> Study Planner</a>
+    <a href="skills.html"        class="nav-item"><span class="nav-icon">🚀</span> Skills</a>
+    <a href="applications.html"  class="nav-item"><span class="nav-icon">💼</span> Applications</a>
+    <a href="assignments.html"   class="nav-item"><span class="nav-icon">📋</span> Assignments</a>
+    <a href="notes.html"         class="nav-item"><span class="nav-icon">📝</span> Notes</a>
+    <a href="resources.html"     class="nav-item"><span class="nav-icon">🔗</span> Resources</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">U</div>
+      <div class="user-info">
+        <div class="user-name">Loading…</div>
+        <div class="user-email"></div>
+      </div>
+    </div>
+    <button class="nav-logout" id="logout-btn"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <button class="btn btn-icon btn-ghost" id="sidebar-toggle" aria-label="Toggle sidebar" style="display:none;">☰</button>
+    <h1 class="topbar-title">📊 Performance Analyzer</h1>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user-name" style="font-size:.83rem;color:var(--text-muted);"></span>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+  <!-- Page heading -->
+  <div style="margin-bottom:1.5rem;">
+    <div style="font-family:'Poppins',sans-serif;font-size:1.35rem;font-weight:800;margin-bottom:.35rem;">
+      Smart Performance Analyzer
+    </div>
+    <div style="font-size:.87rem;color:var(--text-muted);">
+      Enter your scores and StudyPath will generate a focused study plan automatically.
+    </div>
+  </div>
+
+  <div class="perf-page-grid">
+
+    <!-- ── LEFT: Input Form ── -->
+    <div>
+      <div class="perf-form-card">
+        <div class="perf-form-card-title">📝 Enter Result</div>
+
+        <form id="perf-form" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="perf-subject">Subject <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="perf-subject" class="form-control" placeholder="e.g. Mathematics, DSA, Physics" autocomplete="off" />
+            <div class="perf-field-error" id="perf-subject-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="perf-topic">Topic <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="perf-topic" class="form-control" placeholder="e.g. Arrays, Calculus, Newton's Laws" autocomplete="off" />
+            <div class="perf-field-error" id="perf-topic-error"></div>
+          </div>
+
+          <div class="perf-score-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="perf-score">Score <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="perf-score" class="form-control" placeholder="42" min="0" step="any" />
+              <div class="perf-field-error" id="perf-score-error"></div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="perf-max">Max Score <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="perf-max" class="form-control" placeholder="100" min="1" step="any" />
+              <div class="perf-field-error" id="perf-max-error"></div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:1.1rem;">
+            <label class="form-label">Confidence Level</label>
+            <!-- Hidden real input -->
+            <input type="hidden" id="perf-confidence" value="Medium" />
+            <div class="confidence-group" id="confidence-chips">
+              <button type="button" class="confidence-chip" data-val="Low">Low</button>
+              <button type="button" class="confidence-chip selected-medium" data-val="Medium">Medium</button>
+              <button type="button" class="confidence-chip" data-val="High">High</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="perf-exam-date">Exam Date <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <input type="date" id="perf-exam-date" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="perf-notes">Notes <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+            <textarea id="perf-notes" class="form-control" rows="2" placeholder="Any notes about this result…"></textarea>
+          </div>
+
+          <div class="form-error" id="perf-form-error" style="margin-bottom:.5rem;"></div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="perf-submit-btn">
+            🎯 Analyse &amp; Generate Plan
+          </button>
+        </form>
+
+        <!-- Analysis Result (shown after submit) -->
+        <div id="analysis-result"></div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Previous Results ── -->
+    <div class="perf-results-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div>
+          <div class="section-title">📈 Previous Results</div>
+          <div class="section-subtitle">All your saved performance entries</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="perf-filter-bar">
+        <select id="filter-subject" aria-label="Filter by subject">
+          <option value="all">All Subjects</option>
+        </select>
+        <select id="filter-level" aria-label="Filter by weakness level">
+          <option value="all">All Levels</option>
+          <option value="Critical">Critical</option>
+          <option value="Weak">Weak</option>
+          <option value="Improving">Improving</option>
+          <option value="Strong">Strong</option>
+        </select>
+        <select id="filter-sort" aria-label="Sort results">
+          <option value="newest">Newest First</option>
+          <option value="lowest">Lowest Score First</option>
+        </select>
+      </div>
+
+      <!-- Results list -->
+      <div id="perf-results-list"></div>
+    </div>
+
+  </div><!-- end .perf-page-grid -->
+
+</main>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-items">
+    <a href="dashboard.html"     class="mobile-nav-item"><span class="mobile-nav-icon">🏠</span>Home</a>
+    <a href="performance.html"   class="mobile-nav-item active"><span class="mobile-nav-icon">📊</span>Perf</a>
+    <a href="study-planner.html" class="mobile-nav-item"><span class="mobile-nav-icon">📚</span>Study</a>
+    <a href="skills.html"        class="mobile-nav-item"><span class="mobile-nav-icon">🚀</span>Skills</a>
+    <a href="notes.html"         class="mobile-nav-item"><span class="mobile-nav-icon">📝</span>Notes</a>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/firestore.js"></script>
+<script src="js/performance.js"></script>
+<script>
+  // Confidence chip interaction
+  document.querySelectorAll(".confidence-chip").forEach(function(chip) {
+    chip.addEventListener("click", function() {
+      var val = chip.dataset.val;
+      document.getElementById("perf-confidence").value = val;
+      document.querySelectorAll(".confidence-chip").forEach(function(c) {
+        c.className = "confidence-chip";
+      });
+      chip.classList.add("selected-" + val.toLowerCase());
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resources – StudyPath AI Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    .resources-controls{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;}
+    .search-wrap{position:relative;flex:1;min-width:200px;}
+    .search-wrap input{padding-left:2.4rem;}
+    .search-icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+    .filter-bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;}
+    .filter-btn{padding:.3rem .75rem;border-radius:20px;font-size:.75rem;font-weight:500;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);cursor:pointer;transition:all .2s;}
+    .filter-btn.active{background:rgba(56,189,248,.15);color:var(--primary);border-color:rgba(56,189,248,.3);}
+    .resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+    .resource-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;transition:all .25s;}
+    .resource-card:hover{border-color:var(--border-strong);transform:translateY(-3px);box-shadow:var(--shadow-soft);}
+    .resource-title{font-size:.93rem;font-weight:700;}
+    .resource-desc{font-size:.8rem;color:var(--text-muted);line-height:1.5;flex:1;}
+    .diff-badge{padding:.2rem .55rem;border-radius:20px;font-size:.68rem;font-weight:600;}
+    .diff-beginner{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.25);}
+    .diff-intermediate{background:rgba(245,158,11,.15);color:var(--warning);border:1px solid rgba(245,158,11,.25);}
+    .diff-advanced{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.25);}
+  </style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/guard.js"></script>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header"><a href="index.html" class="brand-wrap"><div class="brand-mark">S</div><div class="brand-text">StudyPath AI Pro <span>Career & Study Companion</span></div></a></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"     class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="performance.html"   class="nav-item"><span class="nav-icon">📊</span> Performance</a>
+    <a href="roadmap.html"       class="nav-item"><span class="nav-icon">🗺️</span> AI Roadmap</a>
+    <a href="study-planner.html" class="nav-item"><span class="nav-icon">📚</span> Study Planner</a>
+    <a href="skills.html"        class="nav-item"><span class="nav-icon">🚀</span> Skills</a>
+    <a href="applications.html"  class="nav-item"><span class="nav-icon">💼</span> Applications</a>
+    <a href="assignments.html"   class="nav-item"><span class="nav-icon">📋</span> Assignments</a>
+    <a href="notes.html"         class="nav-item"><span class="nav-icon">📝</span> Notes</a>
+    <a href="resources.html"     class="nav-item"><span class="nav-icon">🔗</span> Resources</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar">U</div><div class="user-info"><div class="user-name">Loading…</div><div class="user-email"></div></div></div>
+    <button class="nav-logout" id="logout-btn"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <button class="btn btn-icon btn-ghost" id="sidebar-toggle" style="display:none;">☰</button>
+    <h1 class="topbar-title">🔗 Resource Library</h1>
+  </div>
+  <span style="font-size:.78rem;color:var(--text-muted);" id="resource-count"></span>
+</header>
+
+<main class="main-content">
+  <div class="resources-controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="search" id="resource-search" class="form-control" placeholder="Search resources…" />
+    </div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-cat="all">All</button>
+    <button class="filter-btn" data-cat="DSA">DSA</button>
+    <button class="filter-btn" data-cat="Web Development">Web Dev</button>
+    <button class="filter-btn" data-cat="AI/ML">AI/ML</button>
+    <button class="filter-btn" data-cat="Interview Prep">Interview</button>
+    <button class="filter-btn" data-cat="Resume">Resume</button>
+    <button class="filter-btn" data-cat="Internships">Internships</button>
+    <button class="filter-btn" data-cat="Aptitude">Aptitude</button>
+  </div>
+  <div class="filter-bar" style="margin-top:-.5rem;">
+    <button class="filter-btn active" data-diff="all">All Levels</button>
+    <button class="filter-btn" data-diff="Beginner">Beginner</button>
+    <button class="filter-btn" data-diff="Intermediate">Intermediate</button>
+    <button class="filter-btn" data-diff="Advanced">Advanced</button>
+  </div>
+  <div id="resources-grid" class="resources-grid"></div>
+</main>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-items">
+    <a href="dashboard.html"     class="mobile-nav-item"><span class="mobile-nav-icon">🏠</span>Home</a>
+    <a href="study-planner.html" class="mobile-nav-item"><span class="mobile-nav-icon">📚</span>Study</a>
+    <a href="skills.html"        class="mobile-nav-item"><span class="mobile-nav-icon">🚀</span>Skills</a>
+    <a href="roadmap.html"       class="mobile-nav-item"><span class="mobile-nav-icon">🗺️</span>AI</a>
+    <a href="notes.html"         class="mobile-nav-item"><span class="mobile-nav-icon">📝</span>Notes</a>
+  </div>
+</nav>
+
+<div id="toast-container"></div>
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/firestore.js"></script>
+<script src="js/resources.js"></script>
+</body>
+</html>
