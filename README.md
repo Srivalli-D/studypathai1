@@ -1,1 +1,0 @@
-# studypathai1
