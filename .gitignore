@@ -1,0 +1,69 @@
+# ============================================================
+# .gitignore — StudyPath AI Pro
+# ============================================================
+
+# ── CRITICAL: Firebase credentials ────────────────────────
+# The real firebase-config.js contains live API keys.
+# Use js/firebase-config.example.js as the safe template.
+js/firebase-config.js
+
+# ── Node / Package managers ───────────────────────────────
+node_modules/
+package-lock.json
+yarn.lock
+
+# ── Environment / Secrets ─────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# ── Firebase CLI ──────────────────────────────────────────
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+
+# ── Build output ──────────────────────────────────────────
+dist/
+build/
+out/
+
+# ── Cache & temp ──────────────────────────────────────────
+.cache/
+.parcel-cache/
+coverage/
+temp/
+tmp/
+
+# ── OS generated ──────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ── Editor settings ───────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Misc ──────────────────────────────────────────────────
+*.zip
+*.tar.gz
+
+
