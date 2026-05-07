@@ -3,15 +3,7 @@
 // Replace values below with your Firebase project config.
 // ============================================================
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD83JtnxxECoMJjtTfaREEeLBLzWZ6B-WI",
-  authDomain: "studypathai-d6505.firebaseapp.com",
-  projectId: "studypathai-d6505",
-  storageBucket: "studypathai-d6505.firebasestorage.app",
-  messagingSenderId: "487699054271",
-  appId: "1:487699054271:web:d2805a52470e7973f0d00a",
-  measurementId: "G-XBNL172HGF"
-};
+
 
 // ── Detect placeholder config ──────────────────────────────
 function isFirebaseConfigured() {
